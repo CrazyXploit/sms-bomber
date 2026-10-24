@@ -9,22 +9,39 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-java@v4
+      - name: Setup Java
+        uses: actions/setup-java@v5
         with:
           distribution: 'zulu'
           java-version: '17'
 
-      - uses: subosito/flutter-action@v2
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.24.0'
           channel: 'stable'
+          cache: true
 
-      - run: flutter pub get
-      - run: flutter build apk --release --split-per-abi
+      - name: Verify Android project exists
+        run: |
+          if [ ! -d "android" ]; then
+            echo "android/ folder missing — generating platform files"
+            flutter create . --platforms=android
+          else
+            echo "android/ found"
+          fi
 
-      - uses: actions/upload-artifact@v4
+      - name: Pub get
+        run: flutter pub get
+
+      - name: Build APK
+        run: flutter build apk --release --split-per-abi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
         with:
-          name: sms-bomber-pro-apk
+          name: sms-bomber-apk
           path: build/app/outputs/flutter-apk/*.apk
